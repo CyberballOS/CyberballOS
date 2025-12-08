@@ -421,9 +421,13 @@ export class HomeViewModel {
     }
 
 
-    openModal(event) {
-        event.target.parentElement.nextElementSibling.showModal();
+       openModal(event: Event) {
+    const button = (event.target as HTMLElement).closest('button');
+    if (!button) return;
+    const dialog = button.nextElementSibling as HTMLDialogElement;
+    dialog?.showModal();
     }
+
 
 
     openDefaultPortraitModal(event: MouseEvent) {
