@@ -16,8 +16,7 @@
                 <label>Name</label>
                 <input type="text" value.bind="presetName">
                 <label>Description</label>
-                <textarea type="text" value.bind="presetDescription"
-                rows="3"></textarea>
+                <input type="text" value.bind="presetDescription">
             </div>
             <br>
             <div style="display: flex; justify-content: flex-end;">
@@ -39,7 +38,7 @@
             </div>
         </form></dialog>
 
-        <a style="text-align: center" class="bottom-buttons" href ="../../../assets/cyberball_qualtrics.qsf" download="CyberballOS_Qualtrics_Template.qsf">&#128190; Download CyberballOS Qualtrics Survey Template (QSF)</a>
+        <a style="text-align: center" class="bottom-buttons" href ="../../../assets/cyberball_qualtrics.qsf" download>&#128190; Download CyberballOS Qualtrics Survey Template (QSF)</a>
 
         <button class="bottom-buttons" click.delegate="copyIframeToClipboard()">
             <span>${copiedEmbed ? 'Copied!' : '⧉ Copy Embed Code'}</span>
