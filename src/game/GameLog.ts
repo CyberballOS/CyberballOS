@@ -1,4 +1,4 @@
-import { SettingsModel } from "models/settings-model";
+import { type SettingsModel } from '../types/Settings';
 import CyberballGameController from "./CyberballGameController";
 
 interface GameLog {
@@ -31,6 +31,7 @@ export function addGameLogging(controller: CyberballGameController, settings: Se
     })
 
     controller.throwBallCallbacks.addCallback("log throw", (throwerID, recieverID) => {
+        console.log("logging throw", throwerID, recieverID, gameLog.length);
         gameLog.push({ "type": "throw", "thrower": throwerID + 2, "reciever": recieverID + 2, "wait": controller.reportTimeSinceStart() - timeAtCatch });
     });
 
@@ -46,6 +47,7 @@ export function addGameLogging(controller: CyberballGameController, settings: Se
     });
 
     controller.gameEndCallbacks.addCallback("log and post game end", reason => {
+        console.log("game ending, log length:", gameLog.length, "throwCount:", controller.model.throwCount);
         gameLog.push({ "type": "game end", "reason": reason, "time": controller.reportTimeSinceStart() });
 
         processAndReportGameLog(
@@ -70,9 +72,7 @@ function processAndReportGameLog(
     let throwStats: Array<Array<number>> = Array(numPlayers).fill([]).map(() => Array(numPlayers).fill(0));
 
     for (let entry of gameLog) {
-        if (entry.type === "throw") {
-            //account for numbering of game log
-            //in game log as player 1 but we use index 0, 2 => 1, etc...
+        if (entry.type === "throw" && entry.thrower !== undefined && entry.reciever !== undefined) {
             throwStats[entry.thrower - 1][entry.reciever - 1]++;
         }
     }
@@ -94,7 +94,7 @@ function processAndReportGameLog(
 }
 
 function buildListOfPlayerThrows(throwStats: Array<Array<number>>, numPlayers: number) {
-    let msg = {};
+    let msg: Record<string, number> = {};
 
     let loopCount = Math.min(numPlayers, 4)
     for (let i = 0; i < loopCount; i++) {

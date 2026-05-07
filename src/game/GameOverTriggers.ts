@@ -1,4 +1,4 @@
-import { SettingsModel } from '../models/settings-model';
+import { type SettingsModel } from '../types/Settings';
 import CyberballGameController from './CyberballGameController';
 
 export default function addGameOverTriggers(controller: CyberballGameController, settings: SettingsModel) {
@@ -23,14 +23,17 @@ export function addThrowCountGameOverTrigger(controller: CyberballGameController
 }
 
 export function addTimeLimitGameOverTrigger(controller: CyberballGameController, timeLimit: number) {
-    let timeLimitMilliSeconds = timeLimit;
-    if (timeLimitMilliSeconds <= 0) {
-        return;
-    }
-    setTimeout(() => {
-        controller.endGame("global-time-limit");
-    }, timeLimitMilliSeconds);
+    if (timeLimit <= 0) return;
+
+    const interval = setInterval(() => {
+        if (controller.reportTimeSinceStart() >= timeLimit) {
+            controller.endGame("global-time-limit");
+            clearInterval(interval);
+        }
+    }, 50);
 }
+
+
 
 export function addAllCpusLeftGameOverTrigger(controller: CyberballGameController) {
     controller.CPULeaveCallbacks.addCallback("Game Over", () => {
