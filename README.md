@@ -1,4 +1,4 @@
-# `cyberball`
+# `CyberballOS`
 
 An updated easy-implemented, open-source ball-toss game to study group dynamics.
 
