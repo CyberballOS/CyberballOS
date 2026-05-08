@@ -1,4 +1,4 @@
-import { SettingsModel } from '../models/settings-model';
+import { type SettingsModel } from '../types/Settings';
 import CyberballGameModel from './CyberballGameModel';
 import CyberballGameController from './CyberballGameController';
 
@@ -16,9 +16,15 @@ function addCpuTargetingSchedule(controller: CyberballGameController, settings: 
     
     controller.setCpuTargeting(id => {
         let scheduleQueue = schedule.get(id);
+        if (!scheduleQueue || scheduleQueue.length === 0) {
+            controller.endGame("throw-count-met");
+            return null;
+        }
+
         let nextTarget = scheduleQueue.shift();
-        
-        let isValidTarget = (target: number) => {
+
+        let isValidTarget = (target: number | undefined): target is number => {
+            if (target === undefined) return false;
             let differentFromSelf = target !== id;
             let playerStillInGame = controller.model.remainingCpuPlayerIds.has(target) || target === CyberballGameModel.humanPlayerId;
             return differentFromSelf && playerStillInGame;
@@ -27,19 +33,19 @@ function addCpuTargetingSchedule(controller: CyberballGameController, settings: 
         while (!isValidTarget(nextTarget)) {
             if (scheduleQueue.length === 0) {
                 controller.endGame("throw-count-met");
-                break;
+                return null;
             }
             nextTarget = scheduleQueue.shift();
         }
 
         return nextTarget;
     });
-
 }
 
-export function convertTextToSchedule(scheduleMap: Map<string, string>): Map<number, number[]> {
+export function convertTextToSchedule(scheduleMap: Record<string, string>): Map<number, number[]> {
+    const lines = Object.values(scheduleMap);;
 
-    const lines = Array.from(Object.values(scheduleMap));
+
     const schedule = new Map<number, number[]>();
 
     let cpu = 0;
@@ -101,12 +107,12 @@ function addCpuTargetingPreference(controller: CyberballGameController, settings
         let cumultiveDistributionFunction = probablyityDensityFunction.map((sum => value => sum += value)(0));
         let rand = Math.random();
         let index = cumultiveDistributionFunction.findIndex(el => rand <= el);
-        return index <= thrower ? index - 1 : index;
+        return index - 1;
     });
 
     controller.CPULeaveCallbacks.addCallback("Target Preference", (id) => {
-        settings.computerPlayers.forEach((cpuSetting, index) => {
-            cpuSetting.targetPreference[id > index ? id : id + 1] = 0;
+        settings.computerPlayers.forEach((cpuSetting) => {
+            cpuSetting.targetPreference[id + 1] = 0;
             let sum = cpuSetting.targetPreference.reduce((sum, value) => sum + value);
             if (sum === 0) {
                 console.warn(`All targets for CPU ${id} have left!`);

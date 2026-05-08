@@ -3,13 +3,13 @@ import CyberballGameModel from "./CyberballGameModel";
 
 export default class CyberballGameController {
     readonly model: CyberballGameModel;
-    private nextPlannedTarget: number = null;
+    private nextPlannedTarget: number | null = null;
     public CPULeaveCallbacks: CallbackList<[number /** id */, string /** reason */]> = new CallbackList();
     public throwBallCallbacks: CallbackList<[number /* thrower */, number /* receiver */]> = new CallbackList();
     public catchBallCallbacks: CallbackList<[number]> = new CallbackList();
     public humanPlayerMayLeaveCallbacks: CallbackList<[string]> = new CallbackList();
     public gameEndCallbacks: CallbackList<[string]> = new CallbackList();
-    private getNextCpuTarget: (thrower: number) => number = s => s;
+    private getNextCpuTarget: (thrower: number) => number | null = s => s;
 
     constructor(playerStartingWithBall: number, numberOfCpuPlayers: number) {
         this.model = new CyberballGameModel();
@@ -19,7 +19,7 @@ export default class CyberballGameController {
         }
     }
 
-    public setCpuTargeting(getNextCpuTarget: (thrower: number) => number) {
+    public setCpuTargeting(getNextCpuTarget: (thrower: number) => number | null) {
         this.getNextCpuTarget = getNextCpuTarget;
     }
 
@@ -63,11 +63,18 @@ export default class CyberballGameController {
             console.warn("Attempting CPU throw ball when CPU not holding it?");
         }
         // Use the pre-determined target if available
+        if (this.model.playerHoldingBallId === null) {
+            console.warn("No one is holding the ball?");
+            return;
+        }
         if (this.nextPlannedTarget !== null) {
             this.throwBall(this.nextPlannedTarget);
-            this.nextPlannedTarget = null; // Reset after use
+            this.nextPlannedTarget = null;
         } else {
-            this.throwBall(this.getNextCpuTarget(this.model.playerHoldingBallId));
+            const target = this.getNextCpuTarget(this.model.playerHoldingBallId);
+            if (target !== null) {
+                this.throwBall(target);
+            }
         }
     }
 
@@ -105,7 +112,7 @@ export default class CyberballGameController {
         return Date.now() - this.model.startTime
     }
 
-    public getNextTarget(thrower: number): number {
+    public getNextTarget(thrower: number): number | null {        
         if (!this.model.remainingCpuPlayerIds.has(thrower) && thrower !== CyberballGameModel.humanPlayerId) {
             return null;
         }

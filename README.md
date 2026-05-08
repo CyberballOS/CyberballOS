@@ -4,7 +4,7 @@ OSU SP24/25 Capstone Project
 
 An updated easy-implemented, open-source ball-toss game to study group dynamics.
 
-[Cyberball](https://cyberball.osu.edu/) uses [Aurelia](https://aurelia.io/home) as the UI framework and [Phaser](https://phaser.io/) to implement the game.
+[Cyberball](https://cyberball.osu.edu/) uses [React](https://react.dev) as the UI framework and [Phaser](https://phaser.io/) to implement the game.
 
 ## Installation
 
@@ -14,7 +14,7 @@ After you install nodejs and download the repository. Run `npm i` to install dep
 
 Run `npm start` to run the website locally.
 
-Run `npm run build` to build a static webpage for a web server. You only need to copy the `scripts` and `assets` folder and all of the files in the root directory to a web server.
+Run `npm run build` to build a static webpage for a web server. You only need to copy the files within the generated 'dist' directory to a web server.
 
 ## Usage in Qualtrics
 
@@ -24,29 +24,32 @@ The following JavaScript is used to setup the page for collecting data.
 
 ```
 Qualtrics.SurveyEngine.addOnload(function() {
-    this.hideNextButton();
+    this.hideNextButton();
 });
-
+ 
 Qualtrics.SurveyEngine.addOnReady(function() {
-    let that = this;
-
-    function handleSurveyMessage(msg) {
-		
-        for (const [key, value] of Object.entries(msg.data)) {
-            if (key === "player_throws_list") {
-                for (const [throwPath, numThrows] of Object.entries(value)) {
-                    Qualtrics.SurveyEngine.setEmbeddedData(throwPath, numThrows);
-                }
-            } else {
-                Qualtrics.SurveyEngine.setEmbeddedData(key, JSON.stringify(value));
-            }
-        }
-		
-		setTimeout(() => { 
-			that.clickNextButton();
-		}, 3000);
-    }
-    window.addEventListener('message', handleSurveyMessage, { once: true });
+    let that = this;
+ 
+    function handleSurveyMessage(msg) {
+        if (!msg.data || typeof msg.data !== 'object') return;
+        if (!msg.data.game_log) return;
+ 
+        for (const [key, value] of Object.entries(msg.data)) {
+            if (key === "player_throws_list") {
+                for (const [throwPath, numThrows] of Object.entries(value)) {
+                    Qualtrics.SurveyEngine.setEmbeddedData(throwPath, numThrows);
+                }
+            } else {
+                Qualtrics.SurveyEngine.setEmbeddedData(key, JSON.stringify(value));
+            }
+        }
+ 
+        setTimeout(() => { 
+            that.clickNextButton();
+        }, 3000);
+    }
+ 
+    window.addEventListener('message', handleSurveyMessage);
 });
 ```
 

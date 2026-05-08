@@ -1,0 +1,165 @@
+/* Container & Base Styles */
+.page-wrapper {
+  background-color: #f4f7f9;
+  min-height: 100vh;
+  padding: 1rem; /* Use rem for better scaling */
+  box-sizing: border-box;
+}
+
+.page-header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+/*TODO: Stop main-card from changing width between tabs 
+while keeping flexibility when window is resized*/
+.main-card {
+  width: 95%; /* Fluid width */
+  max-width: 1200px; /* Limits growth on ultra-wide screens */
+  margin: 0 auto;
+  background: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Tabs: Flex wrap allows them to stack on tiny phones if needed */
+.tab-bar {
+  display: flex;
+  flex-wrap: wrap;
+  border-bottom: 1px solid #eee;
+}
+
+.tab-item {
+  flex: 1;
+  min-width: 100px;
+  padding: 1rem;
+  border: none;
+  background: none;
+  cursor: pointer;
+  transition: 0.3s;
+  border-radius: 0;
+}
+
+.tab-item.active {
+  background-color: #007bff;
+  color: white;
+  font-weight: bold;
+  border-radius: 0;
+}
+
+.tab-content {
+  /* CHANGE: This forces the inner area to fill the main-card's height */
+  flex-grow: 1; 
+  display: flex;
+  flex-direction: column;
+}
+
+/* Updated Empty View to center text but push button down */
+.empty-view {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center; /* Centers the "No games" text vertically */
+  align-items: center;
+  padding: 2rem;
+}
+
+/* Content Grid - Responsive Logic */
+.grid-labels {
+  display: none; /* Hide labels on mobile by default */
+  padding: 1rem;
+  background: #f9f9f9;
+  font-size: 0.75rem;
+  color: #999;
+  border-bottom: 1px solid #eee;
+}
+
+.preset-row {
+  display: flex;
+  flex-direction: column; /* Stack vertically on mobile */
+  padding: 1.5rem;
+  gap: 1.5rem;
+  background-color: white;
+  border-bottom: 1px solid #eee;
+}
+
+.preset-row:hover {
+  background-color: #f8fbff;
+}
+
+.video-aspect-box {
+  width: 100%;
+  aspect-ratio: 16 / 9; /* Maintains video shape regardless of size */
+  background: #fff;
+  border: 1px solid #ddd;
+}
+
+.video-placeholder {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ccc;
+}
+
+.btn1 {
+    padding: 10px 0;
+    margin: 20px auto;
+    border-radius: 5px;
+    background-color: #007BFF;
+    color: #ffffff;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    text-decoration: none;
+    display: flex;
+    justify-content: center;
+    width: 250px;
+    white-space: nowrap;
+    align-items: center;
+    min-width: 150px;
+}
+
+/* Desktop Overrides (Screens wider than 768px) */
+@media (min-width: 768px) {
+  .grid-labels {
+    display: grid;
+    grid-template-columns: 150px 1fr 1.5fr;
+  }
+
+  .preset-row {
+    flex-direction: row; /* Side-by-side on desktop */
+    display: grid;
+    grid-template-columns: 150px 1fr 1.5fr;
+    align-items: start;
+  }
+
+  .page-wrapper {
+    padding: 3rem;
+  }
+}
+
+.file-upload-wrapper {
+  flex-grow: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 2rem;
+}
+
+.upload-btn {
+  background-color: #007bff;
+  color: white;
+  padding: 14px 24px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.upload-btn input {
+  display: none;
+}
+
+

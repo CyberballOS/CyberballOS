@@ -1,8 +1,6 @@
-import { SettingsModel } from '../models/settings-model';
 import CyberballGameController from './CyberballGameController';
-import { CpuSettingsModel } from 'models/cpu-settings-model';
-import { LeaveTrigger, PlayerSettingsModel } from 'models/player-settings-model';
 import CyberballGameModel from './CyberballGameModel';
+import { LeaveTrigger, type SettingsModel, type CpuSettingsModel, type PlayerSettingsModel } from '../types/Settings';
 
 export default function addAllLeaveTriggers(controller: CyberballGameController, settings: SettingsModel) {
     addAllCpuLeaveTriggers(controller, settings);
@@ -22,9 +20,10 @@ export function addPlayerMayLeaveTriggers(controller: CyberballGameController, s
 }
 
 function shouldDisableLeaveTrigger(settings: CpuSettingsModel | PlayerSettingsModel, leavePercentageAttr: string): boolean {
-    const leavePercentage = leavePercentageAttr in settings ? settings[leavePercentageAttr] : 100;
+    const leavePercentage = leavePercentageAttr in settings ? (settings as Record<string, unknown>)[leavePercentageAttr] as number ?? 100 : 100;
     return leavePercentage <= Math.random() * 100;
 }
+
 
 function floatingRandom(mean: number, variance: number): number {
     return mean + (Math.random() * 2 * variance - variance);
@@ -41,28 +40,29 @@ export function addLeaveTriggers(
     settings: CpuSettingsModel | PlayerSettingsModel,
     totalNumberOfCpus: number,
 ) {
+    if (!settings.leaveTrigger) return;
     if (settings.leaveTrigger & LeaveTrigger.Turn) {
         if (shouldDisableLeaveTrigger(settings, 'leaveTurnChance')) return;
-        let leaveTurn = integralRandom(settings.leaveTurn, settings.leaveTurnVariance);
+        let leaveTurn = integralRandom(settings.leaveTurn ?? 0, settings.leaveTurnVariance ?? 0);
         addTurnLeaveTrigger(controller, playerId, leaveCallback, leaveTurn);
     }
     if (settings.leaveTrigger & LeaveTrigger.Time) {
         if (shouldDisableLeaveTrigger(settings, 'leaveTimeChance')) return;
-        let leaveTimeMilliseconds = floatingRandom(settings.leaveTime, settings.leaveTimeVariance);
+        let leaveTimeMilliseconds = floatingRandom(settings.leaveTime ?? 0, settings.leaveTimeVariance ?? 0);
         addTimeLeaveTrigger(controller, playerId, leaveCallback, leaveTimeMilliseconds);
     }
     if (settings.leaveTrigger & LeaveTrigger.Ignored) {
         if (shouldDisableLeaveTrigger(settings, 'leaveIgnoredChance')) return;
-        let leaveThrows = integralRandom(settings.leaveIgnored, settings.leaveIgnoredVariance);
+        let leaveThrows = integralRandom(settings.leaveIgnored ?? 0, settings.leaveIgnoredVariance ?? 0);
         addIgnoredLeaveTrigger(controller, playerId, leaveCallback, leaveThrows);
     }
     if (settings.leaveTrigger & LeaveTrigger.OtherLeaver) {
         if (shouldDisableLeaveTrigger(settings, 'leaveOtherLeaverChance')) return;
-        addOtherLeaverLeaveTrigger(controller, playerId, leaveCallback, settings.leaveOtherLeaver, totalNumberOfCpus);
+        addOtherLeaverLeaveTrigger(controller, playerId, leaveCallback, settings.leaveOtherLeaver ?? 1, totalNumberOfCpus);
     }
     if (settings.leaveTrigger & LeaveTrigger.TimeIgnored) {
         if (shouldDisableLeaveTrigger(settings, 'leaveTimeIgnoredChance')) return;
-        let leaveTimeMilliseconds = floatingRandom(settings.leaveTimeIgnored, settings.leaveTimeIgnored);
+        let leaveTimeMilliseconds = floatingRandom(settings.leaveTimeIgnored ?? 0, settings.leaveTimeIgnored ?? 0);
         addTimeIgnoredLeaveTrigger(controller, playerId, leaveCallback, leaveTimeMilliseconds);
     }
 }

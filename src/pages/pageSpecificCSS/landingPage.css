@@ -1,0 +1,96 @@
+* {
+    box-sizing: border-box;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    background-color: #f7f7f7;
+}
+
+.content {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
+    place-items: center;
+    align-items: flex-start;
+    padding: 2em;
+    gap: 0.5em;
+}
+
+.container {
+    width: clamp(20%, max-content, 70%);
+    background-color: #ffffff;
+    padding: 50px;
+    border-radius: 10px;
+    border: 1px solid #ccc;
+    box-shadow: 0px 10px 25px rgba(0, 0, 0, 0.1);
+    position: relative;
+    margin: 20px auto;
+}
+
+.container h2 {
+    text-align: center;
+}
+
+.welcome-image {
+    width: 40%;
+    display: block;
+    margin: 0 auto;
+    padding: 1em;
+}
+
+h1 {
+    margin-bottom: 30px;
+    color: #333;
+}
+
+.btn-column-centered {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+a.btn1 {
+    padding: 10px 20px;
+    margin: 5px;
+    border-radius: 5px;
+    background-color: #007BFF;
+    color: #ffffff;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    text-decoration: none;
+    display: flex;
+    justify-content: center;
+    width: 40%;
+}
+
+a.btn1:hover {
+    background-color: #0056b3;
+}
+
+@media (max-width: 800px) {
+    .content {
+        grid-template-columns: 1fr;
+        padding: 15px;
+    }
+
+    .content.container {
+        width: 90%;
+        max-width: 100%;
+        padding: 30px 20px;
+        margin: 30px auto;
+    }
+
+    .top-banner {
+        margin-bottom: 10px;
+    }
+
+    a.btn1 {
+        width: 80%;
+    }
+
+    h1 {
+        font-size: 1.5rem;
+        text-align: center;
+    }
+}

@@ -1,0 +1,12 @@
+.infoButton {
+    background: #1e73d8;
+    color: white;
+    border: none;
+    font-weight: bold;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    font-size: 13px;
+    cursor: pointer;
+    vertical-align: middle;
+}

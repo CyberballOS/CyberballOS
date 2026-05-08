@@ -1,4 +1,4 @@
-import { SettingsModel } from './../models/settings-model';
+import { type SettingsModel } from '../types/Settings';
 import Phaser from 'phaser';
 import CyberballGameController from '../game/CyberballGameController';
 import CyberballGameModel from '../game/CyberballGameModel';
@@ -12,17 +12,17 @@ export class CyberballScene extends Phaser.Scene {
     cyberballGameController: CyberballGameController;
 
     // Game Objects:
-    private ballSprite: Phaser.GameObjects.Sprite;
-    private playerSprite: Phaser.GameObjects.Sprite;
-    private playerGroup: Phaser.Physics.Arcade.Group;
+    private ballSprite!: Phaser.GameObjects.Sprite;
+    private playerSprite!: Phaser.GameObjects.Sprite;
+    private playerGroup!: Phaser.Physics.Arcade.Group;
     private sprites: Map<number, Phaser.GameObjects.Sprite> = new Map();
-    private timeLimitText: Phaser.GameObjects.Text;
+    private timeLimitText!: Phaser.GameObjects.Text;
 
 
     // Gameplay Mechanics:
 
-    private throwTarget: Phaser.GameObjects.Sprite;
-    private leaveButton;
+    private throwTarget!: Phaser.GameObjects.Sprite;
+    private leaveButton: any = null;
 
     constructor(settings: SettingsModel, controller: CyberballGameController) {
         super({});
@@ -34,10 +34,17 @@ export class CyberballScene extends Phaser.Scene {
             this.catchBall(id);
         });
         this.cyberballGameController.throwBallCallbacks.addCallback("Phaser throw", (thrower, reciever) => {
-            this.throwBall(this.sprites.get(thrower), this.sprites.get(reciever));
+            const throwerSprite = this.sprites.get(thrower);
+            const recieverSprite = this.sprites.get(reciever);
+            if (throwerSprite && recieverSprite) {
+                this.throwBall(throwerSprite, recieverSprite);
+            }
         });
         this.cyberballGameController.CPULeaveCallbacks.addCallback("Phaser cpu leave", id => {
-            this.leaveGame(this.sprites.get(id));
+            const sprite = this.sprites.get(id);
+            if (sprite) {
+                this.leaveGame(sprite);
+            }
         });
         this.cyberballGameController.gameEndCallbacks.addCallback("Phaser game end", () => {
             this.gameOver();
@@ -48,11 +55,20 @@ export class CyberballScene extends Phaser.Scene {
     }
     
     private showLeaveButton() {
-        this.leaveButton = this.add.dom(0, 0, 'button', 'position: absolute; bottom: 20px; right: 20px; width: 100px; height: 50px;', 'Leave');
-        this.leaveButton.addListener('click');
-        this.leaveButton.on('click', () => {
+        const x = (this.game.config.width as number) - 70;
+        const y = (this.game.config.height as number) - 45;
+    
+        const bg = this.add.rectangle(x, y, 100, 50, 0x007BFF);
+        bg.setInteractive({ useHandCursor: true });
+        bg.on('pointerdown', () => {
             this.cyberballGameController.endGame('player-leave');
-        })
+        });
+    
+        const label = this.add.text(x, y, 'Leave', 
+            { fontFamily: 'Arial', color: '#ffffff', fontSize: '16px' }
+        ).setOrigin(0.5);
+    
+        this.leaveButton = { bg, label };
     }
 
 
@@ -82,7 +98,7 @@ export class CyberballScene extends Phaser.Scene {
             console.log("All assets loaded!");
         });
     
-        this.load.start();  // Ensure images are actually loaded
+        this.load.start();
     }
     
 
@@ -125,27 +141,11 @@ export class CyberballScene extends Phaser.Scene {
         console.log("Human player created with ID:", CyberballGameModel.humanPlayerId);
     
         if (this.settings.player.portraitBuff) {
-            this.load.once('complete', () => {
-              const pos = this.getPlayerPortraitPosition(this.playerSprite);
-              const maxW = 100;
-              const maxH = 100;
-              const container = document.createElement('div');
-              container.style.width   = `${maxW}px`;
-              container.style.height  = `${maxH}px`;
-
-              const img = document.createElement('img');
-              img.src = this.settings.player.portraitBuff;
-
-              img.style.objectFit   = 'contain';
-              img.style.width       = '100%';
-              img.style.height      = '100%';
-              img.style.background  = '#fff';
-
-              container.appendChild(img);
-              this.add.dom(pos.x, pos.y, container);
-            });
-            this.load.start();
-          } else {
+            const pos = this.getPlayerPortraitPosition(this.playerSprite);
+            const img = this.add.image(pos.x, pos.y, 'playerPortrait');
+            const scale = (this.settings.portraitHeight || 100) / img.height;
+            img.setScale(scale);
+        } else {
             console.warn("No portrait found for human player!");
         }
     }
@@ -171,31 +171,18 @@ export class CyberballScene extends Phaser.Scene {
     
             if (this.cyberballGameController.model.playerHoldingBallId === CyberballGameModel.humanPlayerId) {
                 console.log(`Throwing ball to CPU ${i}`);
-                this.throwBall(this.playerSprite, cpuSprite);
+                //this.throwBall(this.playerSprite, cpuSprite); - TODO we should probably trigger the throw in the controller and let the animation happen in the scene, to avoid desync issues
                 this.cyberballGameController.throwBall(i); // Trigger the throw in the controller
             }
         });
     
         // Ensure CPU portraits load correctly
         if (this.settings.computerPlayers[i].portraitBuff) {
-            this.load.once('complete', () => {
-              const pos = this.getCPUPortraitPosition(i, cpuSprite);
-              const maxW = 100;
-              const maxH = this.settings.portraitHeight || 100;
-              const container = document.createElement('div');
-              container.style.width  = `${maxW}px`;
-              container.style.height = `${maxH}px`;
-              const img = document.createElement('img');
-              img.src            = this.settings.computerPlayers[i].portraitBuff!;
-              img.style.objectFit  = 'contain';
-              img.style.width      = '100%';
-              img.style.height     = '100%';
-              img.style.background = '#fff'; 
-              container.appendChild(img);
-              this.add.dom(pos.x, pos.y, container);
-            });
-            this.load.start();
-          }
+            const pos = this.getCPUPortraitPosition(i, cpuSprite);
+            const img = this.add.image(pos.x, pos.y, 'cpuPortrait' + i);
+            const scale = (this.settings.portraitHeight || 100) / img.height;
+            img.setScale(scale);
+        }
     
         this.sprites.set(i, cpuSprite);
     }
@@ -268,7 +255,7 @@ export class CyberballScene extends Phaser.Scene {
         // Time Limit:
         if (this.settings.timeLimit > 0 && this.settings.displayTimeLimit) {
             this.timeLimitText.setText(this.getTimeString());
-            console.log(this.getTimeString())
+            //console.log(this.getTimeString())
         }
     }
 
@@ -281,8 +268,11 @@ export class CyberballScene extends Phaser.Scene {
         this.add.rectangle(this.sys.canvas.width / 2, this.sys.canvas.height / 2, this.sys.canvas.width, this.sys.canvas.height, 0xdddddd, this.settings.gameOverOpacity);
         this.add.text(this.sys.canvas.width / 2, this.sys.canvas.height / 2, this.settings.gameOverText, textStyle).setOrigin(0.5);
 
-        // Hide leave button:
-        if (this.leaveButton != null) this.leaveButton.node.style = "visibility: hidden";
+        // Hide leave button if it's still visible
+        if (this.leaveButton != null) {
+            this.leaveButton.bg.setVisible(false);
+            this.leaveButton.label.setVisible(false);
+        }
     }
 
     // Mechanics:
@@ -297,12 +287,18 @@ export class CyberballScene extends Phaser.Scene {
 
         // Ball physics:
         let ballTargetPosition = this.getCaughtBallPosition(receiver);
-        this.physics.moveTo(this.ballSprite, ballTargetPosition.x, ballTargetPosition.y,  this.settings.ballSpeed);
+        let dx = ballTargetPosition.x - this.ballSprite.x;
+        let dy = ballTargetPosition.y - this.ballSprite.y;
+        let distance = Math.sqrt(dx * dx + dy * dy);
+        let travelTimeSec = this.settings.ballSpeed / 1000;
+        let speed = travelTimeSec > 0 ? distance / travelTimeSec : distance;
+        this.physics.moveTo(this.ballSprite, ballTargetPosition.x, ballTargetPosition.y, speed);
     }
 
 
     public catchBall(receiverId: number) {
         let receiver = this.sprites.get(receiverId)
+        if (!receiver) return;
         receiver.play('catch');
 
         // Ball physics:
@@ -324,8 +320,9 @@ export class CyberballScene extends Phaser.Scene {
                 const nextTargetId = this.cyberballGameController.getNextTarget(receiverId);
                 if (nextTargetId !== null) {
                     const nextTarget = this.sprites.get(nextTargetId);
-                    // Update orientation to face the next target
-                    receiver.flipX = nextTarget.x < receiver.x;
+                    if (nextTarget !== undefined) {
+                        receiver.flipX = nextTarget.x < receiver.x;
+                    }
                 }
 
                 ballPosition = this.getActiveBallPosition(receiver);
@@ -357,23 +354,27 @@ export class CyberballScene extends Phaser.Scene {
     // Helpers:
 
     getCPUPosition(i: number): Phaser.Geom.Point {
-        
         let leftMargin = 200;
         let rightMargin = 200;
     
-        // if protrait
         let extraPadding = this.settings.hasPortraits 
             ? (this.settings.portraitHeight + this.settings.portraitPadding * 2) 
             : 0;
     
-        // compute x
+        if (this.settings.computerPlayers.length === 1) {
+            return new Phaser.Geom.Point(
+                this.sys.canvas.width / 2,
+                75 + extraPadding
+            );
+        }
+    
         let step = (this.sys.canvas.width - leftMargin - rightMargin) 
                  / (this.settings.computerPlayers.length - 1);
     
         let x = leftMargin + step * i;
         let y = i === 0 || i === this.settings.computerPlayers.length - 1
             ? this.sys.canvas.height / 2
-            : (75 + extraPadding); // y
+            : (75 + extraPadding);
     
         return new Phaser.Geom.Point(x, y);
     }
@@ -381,7 +382,13 @@ export class CyberballScene extends Phaser.Scene {
     getCPUPortraitPosition(i: number, sprite: Phaser.GameObjects.Sprite): Phaser.Geom.Point {
         let position = this.getCPUPosition(i);
         let x: number, y: number;
-    
+
+        if (this.settings.computerPlayers.length === 1) {
+            return new Phaser.Geom.Point(
+                position.x,
+                position.y - this.settings.portraitHeight + this.settings.portraitPadding * 2 - sprite.height / 2
+            );
+        }
         if (i === 0) {
         // left
             x = position.x - sprite.width / 2 - this.settings.portraitPadding - this.settings.portraitHeight / 2;
@@ -439,4 +446,3 @@ export class CyberballScene extends Phaser.Scene {
         return `${this.settings.timeLimitText} ${time.getUTCMinutes()}:${time.getUTCSeconds() < 10 ? '0' : ''}${time.getUTCSeconds()}`;
     }
 }
-
