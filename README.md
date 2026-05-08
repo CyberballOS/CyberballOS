@@ -1,7 +1,5 @@
 # `cyberball`
 
-OSU SP24/25 Capstone Project
-
 An updated easy-implemented, open-source ball-toss game to study group dynamics.
 
 [Cyberball](https://cyberball.osu.edu/) uses [React](https://react.dev) as the UI framework and [Phaser](https://phaser.io/) to implement the game.
